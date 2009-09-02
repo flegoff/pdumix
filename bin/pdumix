@@ -146,15 +146,20 @@ end
 
 def fetch_node(file, options)
   name = options[:node]
-  if options[:verbose]
-    node = file[name]
-    puts "[#{name}]"
-    puts "  chassis=#{node['chassis']}"
-    puts "  port=#{node['port']}"
-    puts "  pdu=#{node['pdu']}"
-    return node
+
+  if not (node = file[name])
+    raise
+    return
   else
-    return file[name]
+  
+    if options[:verbose]
+      puts "[#{name}]"
+      puts "  chassis=#{node['chassis']}"
+      puts "  port=#{node['port']}"
+      puts "  pdu=#{node['pdu']}"
+    end
+  
+    return node
   end
 end
 
@@ -212,10 +217,14 @@ def read_state(file,node,options)
         puts "unable to etablish a SNMP session to #{node['pdu']}"
         exit
 
-      rescue SNMP::RequestTimeout
+      rescue SNMP
         puts "#{$0}: error: #{$!}"
         puts "unable to read data on host, please check your SNMP 'read' and 'write' community configuration"
         exit
+
+      rescue
+        puts "#{$0}: error: #{$!}"
+        puts "please report this error to the authors"
 
       end # begin
     end # SNMP::Manager.open
@@ -229,7 +238,7 @@ end
 # => node: node object
 # => options: option hash table
  
-def change_state(file,node,options)
+def change_state(file, node, options)
 
   powerUnitState_OID = ObjectId.new("#{$powerUnitState}.#{node['port']}")
 
@@ -254,10 +263,14 @@ def change_state(file,node,options)
       puts "unable to etablish a SNMP session to #{node['pdu']}"
       exit
 
-    rescue SNMP::RequestTimeout
+    rescue SNMP
       puts "#{$0}: error: #{$!}"
-      puts "unable to read data on host, please check your SNMP 'read' and 'write' community configuration"
+      puts "unable to read or write data on host, please check your SNMP 'read' and 'write' community configuration"
       exit
+      
+    rescue
+      puts "#{$0}: error: #{$!}"
+      puts "please report this error to the authors"
 
     end # begin
   end # SNMP::Manager.open
@@ -269,20 +282,22 @@ end
 # --- main
 #
 
-begin
-  file = fetch_file('mapping.yml')
-rescue
-  puts "#{$0}: error: #{$!}"
-  puts "unable to continue without a proper or readable configuration file, exiting..."
-  exit
-end
-
 options = { }
 parse_options(options)
 
-if not (node = fetch_node(file, options))
-  puts "#{$0}: error: node not found in configuration\n"
+begin
+  file = fetch_file('mapping2.yml')
+  node = fetch_node(file, options)
+
+rescue SystemCallError
+  puts "#{$0}: error: #{$!}"
+  puts "unable to continue without a proper or readable configuration file, exiting..."
   exit
+
+rescue
+  puts "#{$0}: error: node not found in configuration"
+  exit
+  
 else
   if options[:action]
     change_state(file, node, options)
