@@ -132,7 +132,7 @@ end
 # returns : a hash table containing the configuration
 
 def fetch_file(file)
-  return YAML.load_file(file)
+    return YAML.load_file(file)
 end
 
 
@@ -202,13 +202,24 @@ def read_state(file,node,options)
 
   powerUnitState_OID = ObjectId.new("#{$powerUnitState}.#{node['port']}")
     
-  SNMP::Manager.open( :Host => node['pdu'],
-                      :Community => 'private',
-                      :Version => :SNMPv1) do |manager|
-    portState = manager.get_value(powerUnitState_OID)
-    puts "current_state=#{portState}"
-  end
-  
+  SNMP::Manager.open( :Host => node['pdu'], :Community => 'public', :WriteCommunity => 'private', :Version => :SNMPv1) do |manager|
+    begin
+      portState = manager.get_value(powerUnitState_OID)
+      puts "current_state=#{portState}"
+
+      rescue SocketError
+        puts "#{$0}: error: #{$!}"
+        puts "unable to etablish a SNMP session to #{node['pdu']}"
+        exit
+
+      rescue SNMP::RequestTimeout
+        puts "#{$0}: error: #{$!}"
+        puts "unable to read data on host, please check your SNMP 'read' and 'write' community configuration"
+        exit
+
+      end # begin
+    end # SNMP::Manager.open
+
 end
 
 # ---
@@ -221,26 +232,35 @@ end
 def change_state(file,node,options)
 
   powerUnitState_OID = ObjectId.new("#{$powerUnitState}.#{node['port']}")
-    
-  SNMP::Manager.open( :Host => node['pdu'],
-                      :Community => 'private',
-                      :WriteCommunity => 'private',
-                      :Version => :SNMPv1) do |manager|
-                          
-    portState = manager.get_value(powerUnitState_OID)
-    portNewState = options[:action]
 
-    if options[:verbose]
-      puts "  ? read   : state : #{portState}"
-      puts "  = wanted : state : #{portNewState}"
-    end
+  SNMP::Manager.open( :Host => node['pdu'], :Community => 'public', :WriteCommunity => 'private', :Version => :SNMPv1) do |manager|
+    begin
+      portState = manager.get_value(powerUnitState_OID)
+      portNewState = options[:action]
 
-    if (portState != portNewState)
-      puts "  ! write  : state : #{portNewState}" if options[:verbose]
-      var = VarBind.new(powerUnitState_OID, SNMP::Integer.new(portNewState))
-      manager.set(var)
-    end
-  end
+      if options[:verbose]
+        puts "  ? read   : state : #{portState}"
+        puts "  = wanted : state : #{portNewState}"
+      end
+
+      if (portState != portNewState)
+        puts "  ! write  : state : #{portNewState}" if options[:verbose]
+        var = VarBind.new(powerUnitState_OID, SNMP::Integer.new(portNewState))
+        manager.set(var)
+      end
+
+    rescue SocketError
+      puts "#{$0}: error: #{$!}"
+      puts "unable to etablish a SNMP session to #{node['pdu']}"
+      exit
+
+    rescue SNMP::RequestTimeout
+      puts "#{$0}: error: #{$!}"
+      puts "unable to read data on host, please check your SNMP 'read' and 'write' community configuration"
+      exit
+
+    end # begin
+  end # SNMP::Manager.open
 
 end
 
@@ -249,7 +269,13 @@ end
 # --- main
 #
 
-file = fetch_file('mapping_pdu.txt')
+begin
+  file = fetch_file('mapping.yml')
+rescue
+  puts "#{$0}: error: #{$!}"
+  puts "unable to continue without a proper or readable configuration file, exiting..."
+  exit
+end
 
 options = { }
 parse_options(options)
