@@ -1,0 +1,334 @@
+# 
+# pdumix! - sample YAML configuration file
+#
+# The file is composed of a list of nodes looking like that :
+#
+# node_name: {
+#    pdu: pdu_host_name_or_ip,
+#    port: outlet_number,
+#    chassis: chassis_id,			# used to store the ouletname into the PDU conf'
+#    impacts: list_of_nodes_sharing_the_outlet 
+# }
+#
+
+chinqchint-1.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 1,
+	chassis: 1,
+	impacts: chinqchint-2.lille.grid5000.fr	
+}
+
+chinqchint-2.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 1,
+	chassis: 1,
+	impacts: chinqchint-1.lille.grid5000.fr	
+}
+
+chinqchint-3.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 2,
+	chassis: 2,
+	impacts: chinqchint-4.lille.grid5000.fr	
+}
+
+chinqchint-4.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 2,
+	chassis: 2,
+	impacts: chinqchint-3.lille.grid5000.fr	
+}
+
+chinqchint-5.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 3,
+	chassis: 3,
+	impacts: chinqchint-6.lille.grid5000.fr	
+}
+
+chinqchint-6.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 3,
+	chassis: 3,
+	impacts: chinqchint-5.lille.grid5000.fr	
+}
+
+chinqchint-7.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 4,
+	chassis: 4,
+	impacts: chinqchint-8.lille.grid5000.fr	
+}
+
+chinqchint-8.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 4,
+	chassis: 4,
+	impacts: chinqchint-7.lille.grid5000.fr	
+}
+
+chinqchint-9.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 5,
+	chassis: 5,
+	impacts: chinqchint-10.lille.grid5000.fr	
+}
+
+chinqchint-10.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 5,
+	chassis: 5,
+	impacts: chinqchint-9.lille.grid5000.fr	
+}
+
+chinqchint-11.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 2,
+	chassis: 6,
+	impacts: chinqchint-12.lille.grid5000.fr	
+}
+
+chinqchint-12.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 2,
+	chassis: 6,
+	impacts: chinqchint-11.lille.grid5000.fr	
+}
+
+chinqchint-13.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 1,
+	chassis: 7,
+	impacts: chinqchint-14.lille.grid5000.fr	
+}
+
+chinqchint-14.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 1,
+	chassis: 7,
+	impacts: chinqchint-13.lille.grid5000.fr	
+}
+
+chinqchint-15.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 3,
+	chassis: 8,
+	impacts: chinqchint-16.lille.grid5000.fr	
+}
+
+chinqchint-16.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 3,
+	chassis: 8,
+	impacts: chinqchint-15.lille.grid5000.fr	
+}
+
+chinqchint-17.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 13,
+	chassis: 9,
+	impacts: chinqchint-18.lille.grid5000.fr	
+}
+
+chinqchint-18.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 13,
+	chassis: 9,
+	impacts: chinqchint-17.lille.grid5000.fr	
+}
+
+chinqchint-19.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 14,
+	chassis: 10,
+	impacts: chinqchint-20.lille.grid5000.fr	
+}
+
+chinqchint-20.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 14,
+	chassis: 10,
+	impacts: chinqchint-19.lille.grid5000.fr	
+}
+
+chinqchint-21.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 15,
+	chassis: 11,
+	impacts: chinqchint-22.lille.grid5000.fr	
+}
+
+chinqchint-22.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 15,
+	chassis: 11,
+	impacts: chinqchint-21.lille.grid5000.fr	
+}
+
+chinqchint-23.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 17,
+	chassis: 12,
+	impacts: chinqchint-24.lille.grid5000.fr	
+}
+
+chinqchint-24.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 17,
+	chassis: 12,
+	impacts: chinqchint-23.lille.grid5000.fr	
+}
+
+chinqchint-25.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 18,
+	chassis: 13,
+	impacts: chinqchint-26.lille.grid5000.fr	
+}
+
+chinqchint-26.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 18,
+	chassis: 13,
+	impacts: chinqchint-25.lille.grid5000.fr	
+}
+
+chinqchint-27.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 22,
+	chassis: 14,
+	impacts: chinqchint-28.lille.grid5000.fr	
+}
+
+chinqchint-28.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 22,
+	chassis: 14,
+	impacts: chinqchint-27.lille.grid5000.fr	
+}
+
+chinqchint-29.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 21,
+	chassis: 15,
+	impacts: chinqchint-30.lille.grid5000.fr	
+}
+
+chinqchint-30.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 21,
+	chassis: 15,
+	impacts: chinqchint-29.lille.grid5000.fr	
+}
+
+chinqchint-31.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 23,
+	chassis: 16,
+	impacts: chinqchint-32.lille.grid5000.fr	
+}
+
+chinqchint-32.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 23,
+	chassis: 16,
+	impacts: chinqchint-31.lille.grid5000.fr	
+}
+
+chinqchint-33.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 4,
+	chassis: 17,
+	impacts: chinqchint-34.lille.grid5000.fr	
+}
+
+chinqchint-34.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 4,
+	chassis: 17,
+	impacts: chinqchint-33.lille.grid5000.fr	
+}
+
+chinqchint-35.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 5,
+	chassis: 18,
+	impacts: chinqchint-36.lille.grid5000.fr	
+}
+
+chinqchint-36.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 5,
+	chassis: 18,
+	impacts: chinqchint-35.lille.grid5000.fr	
+}
+
+chinqchint-37.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 13,
+	chassis: 19,
+	impacts: chinqchint-38.lille.grid5000.fr	
+}
+
+chinqchint-38.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 13,
+	chassis: 19,
+	impacts: chinqchint-37.lille.grid5000.fr	
+}
+
+chinqchint-39.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 14,
+	chassis: 20,
+	impacts: chinqchint-40.lille.grid5000.fr	
+}
+
+chinqchint-40.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 14,
+	chassis: 20,
+	impacts: chinqchint-39.lille.grid5000.fr	
+}
+
+chinqchint-41.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 15,
+	chassis: 21,
+	impacts: chinqchint-42.lille.grid5000.fr	
+}
+
+chinqchint-42.lille.grid5000.fr: {
+	pdu: apc02.lille.grid5000.fr,
+	port: 15,
+	chassis: 21,
+	impacts: chinqchint-41.lille.grid5000.fr	
+}
+
+chinqchint-43.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 9,
+	chassis: 22,
+	impacts: chinqchint-44.lille.grid5000.fr	
+}
+
+chinqchint-44.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 9,
+	chassis: 22,
+	impacts: chinqchint-43.lille.grid5000.fr	
+}
+
+chinqchint-45.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 19,
+	chassis: 23,
+	impacts: chinqchint-46.lille.grid5000.fr	
+}
+
+chinqchint-46.lille.grid5000.fr: {
+	pdu: apc01.lille.grid5000.fr,
+	port: 19,
+	chassis: 23,
+	impacts: chinqchint-45.lille.grid5000.fr	
+}
