@@ -16,46 +16,159 @@
 #   Power off a node :
 #   $ pdumix --down -h chinqchint-1.lille.grid5000.fr
 #
+#   Manual way :
+#   $ pdumix --reboot -o 1 -p apc01.lille.grid5000.fr -c 79priv4t3
+#
 #
 # == Usage
 #   $ pdumix [options]
 #
 #   For help use : pdumix -h
 #
+# 
 # == Options
 #
+#   A mandatory
+#   -n, --name        Set the hostname to be looked up in the configuration
+#
+#   OR the mandatory fields (IN FUTURE RELEASES)
+#   -o, --outlet      Outlet number
+#   -p, --pdu         PDU hostname
+#   -c, --community   SNMP write community
+#
+#   Combined with one of the following
 #   -r, --reboot      Sends the reboot command to the power outlet
 #   -u, --up          Power on the outlet
 #   -d, --down        Power down the outlet
 #
 #   -h, --help        Display help
-#   -d, --debug       Display debug lines
+#   -v, --verbose     Run verbosely
+#
 # 
+# == Authors
+#
+#  - Florian Le Goff < Florian.Le_Goff > at inria.fr
+# 
+# 
+# == License
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS
+# OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+#
+# APC OIDs
+#
+
+$powerUnitState = '1.3.6.1.4.1.318.1.1.12.3.3.1.1.4'
+$powerUnitName  = '1.3.6.1.4.1.318.1.1.12.3.4.1.1.2'
+
+# ---
 
 require 'optparse'
 require 'yaml'
 require 'snmp'
 include SNMP
 
+# ---
+# parse_options
+# : parse the command line options
+# => options : an empty hash table
+# returns: nothing
+
+def parse_options(options)
+  powerState = { 'On' => 1, 'Off' => 2, 'Reboot' => 3 }
+
+  opts = OptionParser.new
+  opts.banner = "Usage: #{$0} <-r|-u|-d> -n <hostname>"
+    
+  opts.on("-n", "--name NODE", "Set the hostname to be looked up in the configuration") do |n|
+    options[:node] = n;
+  end
+
+  opts.on("-r", "--reboot", "Sends the reboot command to the power outlet") do |r|
+    options[:action] = powerState[:Reboot]
+  end
+
+  opts.on("-u", "--up", "Power on the outlet") do |r|
+    options[:action] = powerState[:On]
+  end
+
+  opts.on("-d", "--down", "Power down the outlet") do |r|
+    options[:action] = powerState[:Off]
+  end
+
+  opts.on("-v", "--verbose", "Run verbosely") do |v|
+    options[:verbose] = true
+  end
+        
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+  
+  opts.parse!
+  
+  if (not options[:node]) or (not options.has_key? :action)
+    puts opts
+    exit
+  end
+   
+end
+
+
+# ---
+# fetch_file
+# : loads the configuration file
+# => file: file name
+# returns : a hash table containing the configuration
+
 def fetch_file(file)
   return YAML.load_file(file)
 end
 
-def fetch_node(file, name)
-  node = file[name]
-  print "node=#{name}\n";
-  print "  chassis=#{node['chassis']}\n";
-  print "  port=#{node['port']}\n";
-  print "  pdu=#{node['pdu']}\n";
-  return node
-end
-
-powerUnitState = '1.3.6.1.4.1.318.1.1.12.3.3.1.1.4'
-powerUnitName  = '1.3.6.1.4.1.318.1.1.12.3.4.1.1.2'
 
 # ---
+# fetch_node
+# : loads a node from the configuration
+# => file: configuration object from which the node should be loaded
+# => name: node name
+# => options: option hash table
+# returns : a node hash
+
+def fetch_node(file, options)
+  name = options[:node]
+  if options[:verbose]
+    node = file[name]
+    puts "[#{name}]"
+    puts "  chassis=#{node['chassis']}"
+    puts "  port=#{node['port']}"
+    puts "  pdu=#{node['pdu']}"
+    return node
+  else
+    return file[name]
+  end
+end
+
+
+# ---
+# rewrite_conf
+# : rewrite the PDU's configuration with the chassis information
+# => file: configuration object
 
 def rewrite_conf(file)
+  
+  # this function is currently deprecated
+  return undef
+  
   for i in file
     node = fetch_node(file, i[0])
 
@@ -82,13 +195,18 @@ def rewrite_conf(file)
   end
 end
 
+
 # ---
+# change_state
+# : edit the PDU's configuration
+# => file: configuration object
+# => node: node object
+# => options: option hash table
+ 
+def change_state(file,node,options)
 
-def change_state(file,name,state)
-  node = fetch_node(file, name)
-
-  powerUnitState_OID = ObjectId.new("#{powerUnitState}.#{node['port']}")
-  powerUnitName_OID = ObjectId.new("#{powerUnitName}.#{node['port']}")
+  powerUnitState_OID = ObjectId.new("#{$powerUnitState}.#{node['port']}")
+  powerUnitName_OID = ObjectId.new("#{$powerUnitName}.#{node['port']}")
     
   SNMP::Manager.open( :Host => node['pdu'],
                       :Community => 'private',
@@ -101,27 +219,29 @@ def change_state(file,name,state)
     print "  (R) name=#{portName}\n"
     print "  (R) state=#{portState}\n"
 
-  if (portState != state)
-      print "  (W) state=#{state}\n"
-      var = VarBind.new(powerUnitName_OID, SNMP::Integer.new(state))
+  if (portState != options[:action])
+      print "  (W) state=#{options[:action]}\n"
+      var = VarBind.new(powerUnitName_OID, SNMP::Integer.new(options[:action]))
       # manager.set(var)
     end
   end
 end
 
-# ---
+
+#
+# --- main
+#
 
 file = fetch_file('mapping_pdu.txt')
-# rewrite_conf(file)
 
+options={}
+parse_options(options)
 
-if opt['r'] or opt[''] or opt['']
-  print "yay"
-  state = { 'On' => 1, 'Off' => 2, 'Reboot' => 3 }
-  change_state(file,'chinqchint-1.lille.grid5000.fr', state['Reboot'])
+if not (node = fetch_node(file, options))
+  puts "#{$0}: error: node not found in configuration\n"
+  exit
 else
-  print "usage: #{$0} <-r|-u|-d> <hostname>\n"
-  print "  -r : reboot\n"
-  print "  -u : power up\n"
-  print "  -d : power down\n"
+  change_state(file, node, options)
 end
+
+# eof
