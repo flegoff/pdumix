@@ -85,7 +85,7 @@ include SNMP
 # returns: nothing
 
 def parse_options(options)
-  powerState = { 'On' => 1, 'Off' => 2, 'Reboot' => 3 }
+  powerState = { :on => 1, :off => 2, :reboot => 3 }
 
   opts = OptionParser.new
   opts.banner = "Usage: #{$0} <-r|-u|-d> -n <hostname>"
@@ -94,16 +94,16 @@ def parse_options(options)
     options[:node] = n;
   end
 
-  opts.on("-r", "--reboot", "Sends the reboot command to the power outlet") do |r|
-    options[:action] = powerState[:Reboot]
+  opts.on("-r", "--reboot", "Sends a reboot command to the power outlet") do |r|
+    options[:action] = powerState[:reboot]
   end
 
   opts.on("-u", "--up", "Power on the outlet") do |r|
-    options[:action] = powerState[:On]
+    options[:action] = powerState[:on]
   end
 
   opts.on("-d", "--down", "Power down the outlet") do |r|
-    options[:action] = powerState[:Off]
+    options[:action] = powerState[:off]
   end
 
   opts.on("-v", "--verbose", "Run verbosely") do |v|
@@ -165,10 +165,6 @@ end
 # => file: configuration object
 
 def rewrite_conf(file)
-  
-  # this function is currently deprecated
-  return undef
-  
   for i in file
     node = fetch_node(file, i[0])
 
@@ -206,23 +202,24 @@ end
 def change_state(file,node,options)
 
   powerUnitState_OID = ObjectId.new("#{$powerUnitState}.#{node['port']}")
-  powerUnitName_OID = ObjectId.new("#{$powerUnitName}.#{node['port']}")
     
   SNMP::Manager.open( :Host => node['pdu'],
                       :Community => 'private',
                       :WriteCommunity => 'private',
                       :Version => :SNMPv1) do |manager|
                           
-    portName = manager.get_value(powerUnitName_OID)
     portState = manager.get_value(powerUnitState_OID)
+    portNewState = options[:action]
 
-    print "  (R) name=#{portName}\n"
-    print "  (R) state=#{portState}\n"
+    if options[:verbose]
+      puts "  ? read   : state : #{portState}"
+      puts "  = wanted : state : #{portNewState}"
+    end
 
-  if (portState != options[:action])
-      print "  (W) state=#{options[:action]}\n"
-      var = VarBind.new(powerUnitName_OID, SNMP::Integer.new(options[:action]))
-      # manager.set(var)
+    if (portState != portNewState)
+      puts "  ! write  : state : #{portNewState}" if options[:verbose]
+      var = VarBind.new(powerUnitState_OID, SNMP::Integer.new(portNewState))
+      manager.set(var)
     end
   end
 end
