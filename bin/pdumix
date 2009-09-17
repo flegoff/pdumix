@@ -127,9 +127,9 @@ end
 
 # ---
 # fetch_file
-# : loads the configuration file
+# : loads a configuration file
 # => file: file name
-# returns : a hash table containing the configuration
+# returns : a hash table containing a configuration (nodes list or general conf)
 
 def fetch_file(file)
     return YAML.load_file(file)
@@ -153,46 +153,13 @@ def fetch_node(file, options)
   else
   
     if options[:verbose]
-      puts "[#{name}]"
-      puts "  chassis=#{node['chassis']}"
-      puts "  port=#{node['port']}"
-      puts "  pdu=#{node['pdu']}"
+      puts "found = [#{name}]"
+      puts "found =   chassis=#{node['chassis']}"
+      puts "found =   port=#{node['port']}"
+      puts "found =   pdu=#{node['pdu']}"
     end
   
     return node
-  end
-end
-
-
-# ---
-# rewrite_conf
-# : rewrite the PDU's configuration with the chassis information
-# => file: configuration object
-
-def rewrite_conf(file)
-  for i in file
-    node = fetch_node(file, i[0])
-
-    powerUnitState_OID = ObjectId.new("#{powerUnitState}.#{node['port']}")
-    powerUnitName_OID = ObjectId.new("#{powerUnitName}.#{node['port']}")
-    
-    SNMP::Manager.open( :Host => node['pdu'],
-                        :Community => 'private',
-                        :WriteCommunity => 'private',
-                        :Version => :SNMPv1) do |manager|
-                          
-      tportName = "chassis-#{node['chassis']}"
-      portName = manager.get_value(powerUnitName_OID)
-      portState = manager.get_value(powerUnitState_OID)
-      
-      print "  (R) name=#{portName}\n"
-      print "  (R) state=#{portState}\n"
-      
-      print "  (W) name=#{tportName}\n"
-      var = VarBind.new(powerUnitName_OID, SNMP::OctetString.new(tportName))
-      manager.set(var)
-
-    end
   end
 end
 
@@ -203,11 +170,33 @@ end
 # => node: node object
 # => options: option hash table
  
-def read_state(file,node,options)
+def read_state(file, node, config, options)
 
   powerUnitState_OID = ObjectId.new("#{$powerUnitState}.#{node['port']}")
+
+  snmp_read = config['defaults']['snmp_read']
+  snmp_write = config['defaults']['snmp_write']
+
+  if (not config['pdus'].empty?) and (config['pdus'][node['pdu']])
+    if config['pdus'][node['pdu']]['snmp_read']
+      snmp_read = config['pdus'][node['pdu']]['snmp_read']
+    end
+    if config['pdus'][node['pdu']]['snmp_write']
+      snmp_write = config['pdus'][node['pdu']]['snmp_write']
+    end
+  end
+
+  if (not snmp_read) or (not snmp_write)
+    puts "#{$0}: error: missing snmp read and write communities."
+    exit
+  end
+
+  if options[:verbose]
+    puts "conf  ! setting snmp_read to #{snmp_read}"
+    puts "conf  ! setting snmp_write to #{snmp_write}"
+  end
     
-  SNMP::Manager.open( :Host => node['pdu'], :Community => 'public', :WriteCommunity => 'private', :Version => :SNMPv1) do |manager|
+  SNMP::Manager.open( :Host => node['pdu'], :Community => snmp_read, :WriteCommunity => snmp_write, :Version => :SNMPv1) do |manager|
     begin
       portState = manager.get_value(powerUnitState_OID)
       puts "current_state=#{portState}"
@@ -238,7 +227,7 @@ end
 # => node: node object
 # => options: option hash table
  
-def change_state(file, node, options)
+def change_state(file, node, config, options)
 
   powerUnitState_OID = ObjectId.new("#{$powerUnitState}.#{node['port']}")
 
@@ -286,7 +275,13 @@ options = { }
 parse_options(options)
 
 begin
-  file = fetch_file('mapping2.yml')
+  config = fetch_file('/etc/pdumix/conf')
+
+  if (not config['defaults']) or (not config['defaults']['snmp_read']) or (not config['defaults']['snmp_write'])
+    puts "#{$0}: WARNING: missing defaults section or defaults values for snmp_read and snmp_write in conf file"
+  end
+
+  file = fetch_file(config['nodesfile'])
   node = fetch_node(file, options)
 
 rescue SystemCallError
@@ -295,15 +290,15 @@ rescue SystemCallError
   exit
 
 rescue
-  puts "#{$0}: error: node not found in configuration"
+  puts "#{$0}: error: #{$!}: node not found in configuration"
   exit
   
 else
   if options[:action]
-    change_state(file, node, options)
-    read_state(file, node, options)
+    change_state(file, node, config, options)
+    read_state(file, node, config, options)
   else
-    read_state(file, node, options)
+    read_state(file, node, config, options)
   end
 end
 
