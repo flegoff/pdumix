@@ -1,0 +1,11 @@
+nodesfile: "/etc/pdumix/nodes"
+
+defaults:
+  snmp_read: "public"
+  snmp_write: "private"
+
+pdus:
+  apc01.lille.grid5000.fr:
+    snmp_read: "public"
+    snmp_write: "private"
+
