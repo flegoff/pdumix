@@ -230,8 +230,30 @@ end
 def change_state(file, node, config, options)
 
   powerUnitState_OID = ObjectId.new("#{$powerUnitState}.#{node['port']}")
+  
+  snmp_read = config['defaults']['snmp_read']
+  snmp_write = config['defaults']['snmp_write']
 
-  SNMP::Manager.open( :Host => node['pdu'], :Community => 'public', :WriteCommunity => 'private', :Version => :SNMPv1) do |manager|
+  if (not config['pdus'].empty?) and (config['pdus'][node['pdu']])
+    if config['pdus'][node['pdu']]['snmp_read']
+      snmp_read = config['pdus'][node['pdu']]['snmp_read']
+    end
+    if config['pdus'][node['pdu']]['snmp_write']
+      snmp_write = config['pdus'][node['pdu']]['snmp_write']
+    end
+  end
+
+  if (not snmp_read) or (not snmp_write)
+    puts "#{$0}: error: missing snmp read and write communities."
+    exit
+  end
+
+  if options[:verbose]
+    puts "conf  ! setting snmp_read to #{snmp_read}"
+    puts "conf  ! setting snmp_write to #{snmp_write}"
+  end
+  
+  SNMP::Manager.open( :Host => node['pdu'], :Community => snmp_read, :WriteCommunity => snmp_write, :Version => :SNMPv1) do |manager|s
     begin
       portState = manager.get_value(powerUnitState_OID)
       portNewState = options[:action]
