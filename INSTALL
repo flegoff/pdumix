@@ -1,0 +1,26 @@
+Installation :
+--------------
+
+ cp bin/pdumix /usr/sbin/pdumix
+ mkdir /etc/pdumix
+ chmod 750 /etc/pdumix
+ cp conf/nodes conf/conf /etc/pdumix
+ chmod 640 /etc/pdumix/*
+
+
+Usage :
+------- 
+
+ Read status :
+  pdumix -n chinqchint-1.lille.grid5000.fr
+
+ Reboot node :
+  pdumix -n chinqchint-1.lille.grid5000.fr -r
+
+ Switch outlet off :
+  pdumix -n chinqchint-1.lille.grid5000.fr -d
+
+ Switch outlet on :
+  pdumix -n chinqchint-1.lille.grid5000.fr -u
+
+
