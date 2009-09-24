@@ -2,10 +2,20 @@ Installation :
 --------------
 
  cp bin/pdumix /usr/sbin/pdumix
+ chmod +x /usr/sbin/pdumix
  mkdir /etc/pdumix
  chmod 750 /etc/pdumix
  cp conf/nodes conf/conf /etc/pdumix
  chmod 640 /etc/pdumix/*
+
+
+Configuration :
+---------------
+
+ Edit the passwords in the 'conf' file.
+
+ Build a node list similars to the 'nodes' file, in order
+ to map outlets, PDUs and machine names.
 
 
 Usage :
