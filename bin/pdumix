@@ -8,16 +8,13 @@
 # == Examples
 #
 #   Reboot a node :
-#   $ pdumix --reboot -h chinqchint-1.lille.grid5000.fr
+#   $ pdumix --reboot -n chinqchint-1.lille.grid5000.fr
 #
 #   Power on a node :
-#   $ pdumix --up -h chinqchint-1.lille.grid5000.fr
+#   $ pdumix --up -n chinqchint-1.lille.grid5000.fr
 #
 #   Power off a node :
-#   $ pdumix --down -h chinqchint-1.lille.grid5000.fr
-#
-#   Manual way :
-#   $ pdumix --reboot -o 1 -p apc01.lille.grid5000.fr -c 79priv4t3
+#   $ pdumix --down -n chinqchint-1.lille.grid5000.fr
 #
 #
 # == Usage
@@ -71,6 +68,7 @@
 $powerUnitState = '1.3.6.1.4.1.318.1.1.12.3.3.1.1.4'
 $powerUnitName  = '1.3.6.1.4.1.318.1.1.12.3.4.1.1.2'
 $powerState = { :on => 1, :off => 2, :reboot => 3 }
+$powerStateReversed = { 1 => "On", 2 => "Off", 3 => "Reboot" }
 
 # ---
 
@@ -200,7 +198,7 @@ def read_state(file, node, config, options)
     begin
       portState = manager.get_value(powerUnitState_OID)
       puts "current_state=#{portState}"
-
+      
       rescue SocketError
         puts "#{$0}: error: #{$!}"
         puts "unable to etablish a SNMP session to #{node['pdu']}"
@@ -253,7 +251,7 @@ def change_state(file, node, config, options)
     puts "conf  ! setting snmp_write to #{snmp_write}"
   end
   
-  SNMP::Manager.open( :Host => node['pdu'], :Community => snmp_read, :WriteCommunity => snmp_write, :Version => :SNMPv1) do |manager|s
+  SNMP::Manager.open( :Host => node['pdu'], :Community => snmp_read, :WriteCommunity => snmp_write, :Version => :SNMPv1) do |manager|
     begin
       portState = manager.get_value(powerUnitState_OID)
       portNewState = options[:action]
